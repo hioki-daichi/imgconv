@@ -1,5 +1,8 @@
 # imgconv
 
+[![Build Status](https://travis-ci.com/hioki-daichi/imgconv.svg?branch=master)](https://travis-ci.com/hioki-daichi/imgconv)
+[![codecov](https://codecov.io/gh/hioki-daichi/imgconv/branch/master/graph/badge.svg)](https://codecov.io/gh/hioki-daichi/imgconv)
+
 `imgconv` is a command to convert the file format under the specified directory.
 
 By default, it converts from `JPEG` to `PNG`.
