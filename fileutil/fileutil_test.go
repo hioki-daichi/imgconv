@@ -2,6 +2,9 @@ package fileutil
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -25,4 +28,27 @@ func TestFileutil_StartsContentsWith(t *testing.T) {
 		})
 	}
 
+}
+
+func TestFileutil_CopyDirRec(t *testing.T) {
+	tempdir, _ := ioutil.TempDir("", "imgconv")
+	CopyDirRec("../testdata/", tempdir)
+	defer os.RemoveAll(tempdir)
+	cases := []struct {
+		path string
+	}{
+		{path: "./jpeg/sample1.jpg"},
+		{path: "./jpeg/sample2.jpg"},
+		{path: "./jpeg/sample3.jpeg"},
+		{path: "./png/sample1.png"},
+		{path: "./png/sample2.png"},
+		{path: "./gif/sample1.gif"},
+	}
+	for _, c := range cases {
+		t.Run("", func(t *testing.T) {
+			if _, err := os.OpenFile(filepath.Join(tempdir, c.path), os.O_CREATE|os.O_EXCL, 0); !os.IsExist(err) {
+				t.FailNow()
+			}
+		})
+	}
 }

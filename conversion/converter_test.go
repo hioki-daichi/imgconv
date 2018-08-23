@@ -4,12 +4,12 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+
+	"github.com/hioki-daichi/imgconv/fileutil"
 )
 
 func TestConversion_Convert(t *testing.T) {
@@ -59,46 +59,7 @@ func TestConversion_Convert(t *testing.T) {
 
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
 	tempdir, _ := ioutil.TempDir("", "imgconv")
-	copyDirRec("../testdata/", tempdir)
+	fileutil.CopyDirRec("../testdata/", tempdir)
 	defer os.RemoveAll(tempdir)
 	f(t, tempdir)
-}
-
-func copyDirRec(src string, dest string) error {
-	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		sf, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-
-		destDir := filepath.Join(dest, strings.TrimLeft(filepath.Dir(path), src))
-
-		err = os.MkdirAll(destDir, 0755)
-		if err != nil {
-			return err
-		}
-
-		destPath := filepath.Join(destDir, filepath.Base(path))
-
-		df, err := os.Create(destPath)
-		if err != nil {
-			return err
-		}
-
-		_, err = io.Copy(df, sf)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	return err
 }
