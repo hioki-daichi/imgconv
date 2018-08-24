@@ -60,3 +60,11 @@ func TestFileutil_CopyDirRec(t *testing.T) {
 		})
 	}
 }
+
+func TestFileutil_CopyDirRec_Nonexistence(t *testing.T) {
+	expected := "lstat ./nonexistent_src: no such file or directory"
+	err := CopyDirRec("./nonexistent_src", "./nonexistent_dst")
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
