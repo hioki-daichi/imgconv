@@ -57,6 +57,25 @@ func TestConversion_Convert(t *testing.T) {
 	}
 }
 
+func TestConversion_Convert_Conflict(t *testing.T) {
+	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
+
+	withTempDir(t, func(t *testing.T, tempdir string) {
+		expected := "File already exists: " + tempdir + "/jpeg/sample1.png"
+
+		path := filepath.Join(tempdir, "./jpeg/sample1.jpg")
+
+		_, _ = converter.Convert(path, false)
+		_, err := converter.Convert(path, false)
+
+		actual := err.Error()
+
+		if actual != expected {
+			t.Errorf("expected: %s, actual: %s", expected, actual)
+		}
+	})
+}
+
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
 	tempdir, _ := ioutil.TempDir("", "imgconv")
 	fileutil.CopyDirRec("../testdata/", tempdir)
