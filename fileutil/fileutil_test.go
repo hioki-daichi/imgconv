@@ -27,7 +27,15 @@ func TestFileutil_StartsContentsWith(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestFileutil_StartsContentsWith_Unreadable(t *testing.T) {
+	expected := "EOF"
+	fp, _ := os.Open("./testdata/empty.txt")
+	_, err := StartsContentsWith(fp, []byte("\x01"))
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
 }
 
 func TestFileutil_CopyDirRec(t *testing.T) {
