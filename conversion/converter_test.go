@@ -86,6 +86,15 @@ func TestConversion_Convert_Nonexistence(t *testing.T) {
 	}
 }
 
+func TestConversion_Convert_Undecodable(t *testing.T) {
+	expected := "unexpected EOF"
+	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
+	_, err := converter.Convert("./testdata/undecodable.jpg", true)
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
+
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
 	tempdir, _ := ioutil.TempDir("", "imgconv")
 	fileutil.CopyDirRec("../testdata/", tempdir)
