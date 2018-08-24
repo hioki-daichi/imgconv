@@ -76,6 +76,16 @@ func TestConversion_Convert_Conflict(t *testing.T) {
 	})
 }
 
+func TestConversion_Convert_Nonexistence(t *testing.T) {
+	expected := "open ./nonexistent_path: no such file or directory"
+	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
+	_, err := converter.Convert("./nonexistent_path", true)
+	actual := err.Error()
+	if actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
+
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
 	tempdir, _ := ioutil.TempDir("", "imgconv")
 	fileutil.CopyDirRec("../testdata/", tempdir)
