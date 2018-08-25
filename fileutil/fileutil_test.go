@@ -2,11 +2,32 @@ package fileutil
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 )
+
+type ReadSeekerMock struct {
+	times          int
+	timesToSucceed int
+}
+
+func (m *ReadSeekerMock) Read(_ []byte) (int, error) {
+	return 0, nil
+}
+
+func (m *ReadSeekerMock) Seek(_ int64, _ int) (int64, error) {
+	m.times++
+
+	var err error
+	if m.times > m.timesToSucceed {
+		err = errors.New("unseekable")
+	}
+
+	return 0, err
+}
 
 func TestFileutil_StartsContentsWith(t *testing.T) {
 	cases := []struct {
@@ -33,6 +54,21 @@ func TestFileutil_StartsContentsWith_Unreadable(t *testing.T) {
 	expected := "EOF"
 	fp, _ := os.Open("./testdata/empty.txt")
 	_, err := StartsContentsWith(fp, []byte("\x01"))
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
+
+func TestFileutil_StartsContentsWith_Unseekable(t *testing.T) {
+	expected := "unseekable"
+	b := []byte("\x01")
+
+	_, err := StartsContentsWith(&ReadSeekerMock{timesToSucceed: 0}, b)
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+
+	_, err = StartsContentsWith(&ReadSeekerMock{timesToSucceed: 1}, b)
 	if actual := err.Error(); actual != expected {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
 	}
