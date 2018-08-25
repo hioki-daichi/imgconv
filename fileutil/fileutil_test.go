@@ -84,3 +84,18 @@ func TestFileutil_CopyDirRec_Unopenable(t *testing.T) {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
 	}
 }
+
+func TestFileutil_CopyDirRec_MkdirFailure(t *testing.T) {
+	tempDir, _ := ioutil.TempDir("", "imgconv")
+	dstPath := filepath.Join(tempDir, "foo")
+	err := os.Mkdir(dstPath, 0000)
+	if err != nil {
+		t.FailNow()
+	}
+	defer os.Remove(dstPath)
+	err = CopyDirRec("../testdata/", dstPath)
+	expected := "mkdir " + dstPath + "/gif: permission denied"
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
