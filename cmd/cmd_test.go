@@ -15,6 +15,7 @@ import (
 )
 
 func TestCmd_Run(t *testing.T) {
+	t.Parallel()
 	jpegDecoder := &conversion.Jpeg{}
 	pngDecoder := &conversion.Png{}
 	gifDecoder := &conversion.Gif{}
@@ -70,6 +71,7 @@ func TestCmd_Run(t *testing.T) {
 }
 
 func TestCmd_Run_Nonexistence(t *testing.T) {
+	t.Parallel()
 	expected := "lstat nonexistent_path: no such file or directory"
 	decoder := &conversion.Jpeg{}
 	encoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
@@ -84,6 +86,7 @@ func TestCmd_Run_Nonexistence(t *testing.T) {
 }
 
 func TestCmd_Run_Conflict(t *testing.T) {
+	t.Parallel()
 	decoder := &conversion.Jpeg{}
 	encoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
 	w := ioutil.Discard

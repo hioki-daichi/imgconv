@@ -30,6 +30,7 @@ func (m *ReadSeekerMock) Seek(_ int64, _ int) (int64, error) {
 }
 
 func TestFileutil_StartsContentsWith(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		a        []byte
 		b        []byte
@@ -51,6 +52,7 @@ func TestFileutil_StartsContentsWith(t *testing.T) {
 }
 
 func TestFileutil_StartsContentsWith_Unreadable(t *testing.T) {
+	t.Parallel()
 	expected := "EOF"
 	fp, _ := os.Open("./testdata/empty.txt")
 	_, err := StartsContentsWith(fp, []byte("\x01"))
@@ -60,6 +62,7 @@ func TestFileutil_StartsContentsWith_Unreadable(t *testing.T) {
 }
 
 func TestFileutil_StartsContentsWith_Unseekable(t *testing.T) {
+	t.Parallel()
 	expected := "unseekable"
 	b := []byte("\x01")
 
@@ -75,6 +78,7 @@ func TestFileutil_StartsContentsWith_Unseekable(t *testing.T) {
 }
 
 func TestFileutil_CopyDirRec(t *testing.T) {
+	t.Parallel()
 	tempdir, _ := ioutil.TempDir("", "imgconv")
 	CopyDirRec("../testdata/", tempdir)
 	defer os.RemoveAll(tempdir)
@@ -98,6 +102,7 @@ func TestFileutil_CopyDirRec(t *testing.T) {
 }
 
 func TestFileutil_CopyDirRec_Nonexistence(t *testing.T) {
+	t.Parallel()
 	expected := "lstat ./nonexistent_src: no such file or directory"
 	err := CopyDirRec("./nonexistent_src", "./nonexistent_dst")
 	if actual := err.Error(); actual != expected {
@@ -106,6 +111,7 @@ func TestFileutil_CopyDirRec_Nonexistence(t *testing.T) {
 }
 
 func TestFileutil_CopyDirRec_Unopenable(t *testing.T) {
+	t.Parallel()
 	srcDir, _ := ioutil.TempDir("", "imgconv")
 	srcPath := filepath.Join(srcDir, "unopenable.txt")
 	_, err := os.OpenFile(srcPath, os.O_CREATE, 000)
@@ -122,6 +128,7 @@ func TestFileutil_CopyDirRec_Unopenable(t *testing.T) {
 }
 
 func TestFileutil_CopyDirRec_MkdirFailure(t *testing.T) {
+	t.Parallel()
 	tempDir, _ := ioutil.TempDir("", "imgconv")
 	dstPath := filepath.Join(tempDir, "foo")
 	err := os.Mkdir(dstPath, 0000)

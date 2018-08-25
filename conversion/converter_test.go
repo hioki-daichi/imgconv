@@ -24,6 +24,7 @@ func (m *EncoderMock) Encode(w io.Writer, img image.Image) error {
 }
 
 func TestConversion_Convert(t *testing.T) {
+	t.Parallel()
 	jpegDecoder := &Jpeg{}
 	pngDecoder := &Png{}
 	gifDecoder := &Gif{}
@@ -69,6 +70,7 @@ func TestConversion_Convert(t *testing.T) {
 }
 
 func TestConversion_Convert_Conflict(t *testing.T) {
+	t.Parallel()
 	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
 
 	withTempDir(t, func(t *testing.T, tempdir string) {
@@ -88,6 +90,7 @@ func TestConversion_Convert_Conflict(t *testing.T) {
 }
 
 func TestConversion_Convert_Nonexistence(t *testing.T) {
+	t.Parallel()
 	expected := "open ./nonexistent_path: no such file or directory"
 	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
 	_, err := converter.Convert("./nonexistent_path", true)
@@ -98,6 +101,7 @@ func TestConversion_Convert_Nonexistence(t *testing.T) {
 }
 
 func TestConversion_Convert_Undecodable(t *testing.T) {
+	t.Parallel()
 	expected := "unexpected EOF"
 	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
 	_, err := converter.Convert("./testdata/undecodable.jpg", true)
@@ -107,6 +111,7 @@ func TestConversion_Convert_Undecodable(t *testing.T) {
 }
 
 func TestConversion_Convert_EncodeFailure(t *testing.T) {
+	t.Parallel()
 	expected := "error in EncodeMock.Encode"
 	converter := &Converter{Decoder: &Jpeg{}, Encoder: &EncoderMock{}}
 	withTempDir(t, func(t *testing.T, tempdir string) {

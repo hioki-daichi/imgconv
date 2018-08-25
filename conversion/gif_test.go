@@ -6,6 +6,7 @@ import (
 )
 
 func TestConversion_Gif_MagicBytesSlice(t *testing.T) {
+	t.Parallel()
 	g := Gif{}
 	actual := g.MagicBytesSlice()
 	expected := [][]byte{[]byte("GIF87a"), []byte("GIF89a")}
@@ -15,6 +16,7 @@ func TestConversion_Gif_MagicBytesSlice(t *testing.T) {
 }
 
 func TestConversion_Gif_HasProcessableExtname(t *testing.T) {
+	t.Parallel()
 	g := Gif{}
 
 	cases := []struct {

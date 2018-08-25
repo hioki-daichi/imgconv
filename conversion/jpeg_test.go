@@ -6,6 +6,7 @@ import (
 )
 
 func TestConversion_Jpeg_MagicBytesSlice(t *testing.T) {
+	t.Parallel()
 	j := Jpeg{}
 	actual := j.MagicBytesSlice()
 	expected := [][]byte{[]byte("\xFF\xD8\xFF")}
@@ -15,6 +16,7 @@ func TestConversion_Jpeg_MagicBytesSlice(t *testing.T) {
 }
 
 func TestConversion_Jpeg_HasProcessableExtname(t *testing.T) {
+	t.Parallel()
 	j := Jpeg{}
 
 	cases := []struct {

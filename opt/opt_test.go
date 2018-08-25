@@ -12,6 +12,7 @@ import (
 )
 
 func TestOpt_Parse(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		args    []string
 		dirname string

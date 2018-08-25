@@ -6,6 +6,7 @@ import (
 )
 
 func TestConversion_Png_MagicBytesSlice(t *testing.T) {
+	t.Parallel()
 	p := Png{}
 	actual := p.MagicBytesSlice()
 	expected := [][]byte{[]byte("\x89\x50\x4E\x47\x0D\x0A\x1A\x0A")}
@@ -15,6 +16,7 @@ func TestConversion_Png_MagicBytesSlice(t *testing.T) {
 }
 
 func TestConversion_Png_HasProcessableExtname(t *testing.T) {
+	t.Parallel()
 	p := Png{}
 
 	cases := []struct {

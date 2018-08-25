@@ -11,6 +11,7 @@ import (
 )
 
 func TestGathering_Gather(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		decoder  conversion.Decoder
 		expected []string
@@ -31,6 +32,7 @@ func TestGathering_Gather(t *testing.T) {
 }
 
 func TestGathering_Gather_Nonexistence(t *testing.T) {
+	t.Parallel()
 	expected := "lstat nonexistent_path: no such file or directory"
 	decoder := &conversion.Jpeg{}
 	g := Gatherer{Decoder: decoder}
@@ -41,6 +43,7 @@ func TestGathering_Gather_Nonexistence(t *testing.T) {
 }
 
 func TestGathering_Gather_Unopenable(t *testing.T) {
+	t.Parallel()
 	tempdir, _ := ioutil.TempDir("", "imgconv")
 	defer os.RemoveAll(tempdir)
 
@@ -61,6 +64,7 @@ func TestGathering_Gather_Unopenable(t *testing.T) {
 }
 
 func TestGathering_Gather_Undecodable(t *testing.T) {
+	t.Parallel()
 	decoder := &conversion.Jpeg{}
 	g := Gatherer{Decoder: decoder}
 	if _, err := g.Gather("./testdata/"); err != nil {
