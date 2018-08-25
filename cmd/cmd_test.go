@@ -69,6 +69,33 @@ func TestCmd_Run(t *testing.T) {
 	}
 }
 
+func TestCmd_Run_Conflict(t *testing.T) {
+	decoder := &conversion.Jpeg{}
+	encoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
+	w := ioutil.Discard
+
+	withTempDir(t, func(t *testing.T, tempdir string) {
+		expected := "File already exists: " + tempdir + "/jpeg/sample1.png"
+
+		var runner Runner
+		var err error
+
+		runner = Runner{OutStream: w, Decoder: decoder, Encoder: encoder, Force: true}
+		err = runner.Run(tempdir)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		runner = Runner{OutStream: w, Decoder: decoder, Encoder: encoder, Force: false}
+		err = runner.Run(tempdir)
+
+		actual := err.Error()
+		if actual != expected {
+			t.Errorf("expected: %s, actual: %s", expected, actual)
+		}
+	})
+}
+
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
 	tempdir, _ := ioutil.TempDir("", "imgconv")
 	fileutil.CopyDirRec("../testdata/", tempdir)
