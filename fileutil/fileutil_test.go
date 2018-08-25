@@ -68,3 +68,19 @@ func TestFileutil_CopyDirRec_Nonexistence(t *testing.T) {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
 	}
 }
+
+func TestFileutil_CopyDirRec_Unopenable(t *testing.T) {
+	srcDir, _ := ioutil.TempDir("", "imgconv")
+	srcPath := filepath.Join(srcDir, "unopenable.txt")
+	_, err := os.OpenFile(srcPath, os.O_CREATE, 000)
+	if err != nil {
+		t.FailNow()
+	}
+	defer os.Remove(srcPath)
+	dstDir, _ := ioutil.TempDir("", "imgconv")
+	err = CopyDirRec(srcDir, dstDir)
+	expected := "open " + srcPath + ": permission denied"
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
