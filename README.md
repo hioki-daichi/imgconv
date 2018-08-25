@@ -29,6 +29,12 @@ $ make test
 $ make doc
 ```
 
+## How to see code coverage
+
+```shell
+$ make cov
+```
+
 ## How to specify the input/output file format
 
 **Input file format**
