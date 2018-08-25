@@ -1,9 +1,12 @@
 package conversion
 
 import (
+	"errors"
+	"image"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,6 +14,14 @@ import (
 
 	"github.com/hioki-daichi/imgconv/fileutil"
 )
+
+type EncoderMock struct {
+	Png
+}
+
+func (m *EncoderMock) Encode(w io.Writer, img image.Image) error {
+	return errors.New("error in EncodeMock.Encode")
+}
 
 func TestConversion_Convert(t *testing.T) {
 	jpegDecoder := &Jpeg{}
@@ -93,6 +104,17 @@ func TestConversion_Convert_Undecodable(t *testing.T) {
 	if actual := err.Error(); actual != expected {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
 	}
+}
+
+func TestConversion_Convert_EncodeFailure(t *testing.T) {
+	expected := "error in EncodeMock.Encode"
+	converter := &Converter{Decoder: &Jpeg{}, Encoder: &EncoderMock{}}
+	withTempDir(t, func(t *testing.T, tempdir string) {
+		_, err := converter.Convert(filepath.Join(tempdir, "./jpeg/sample1.jpg"), true)
+		if actual := err.Error(); actual != expected {
+			t.Errorf("expected: %s, actual: %s", expected, actual)
+		}
+	})
 }
 
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
