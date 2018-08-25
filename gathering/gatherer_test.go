@@ -1,6 +1,9 @@
 package gathering
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -32,6 +35,26 @@ func TestGathering_Gather_Nonexistence(t *testing.T) {
 	decoder := &conversion.Jpeg{}
 	g := Gatherer{Decoder: decoder}
 	_, err := g.Gather("nonexistent_path")
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
+
+func TestGathering_Gather_Unopenable(t *testing.T) {
+	tempdir, _ := ioutil.TempDir("", "imgconv")
+	defer os.RemoveAll(tempdir)
+
+	path := filepath.Join(tempdir, "unopenable.jpg")
+	if _, err := os.OpenFile(path, os.O_CREATE, 000); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(path)
+
+	expected := "open " + path + ": permission denied"
+
+	decoder := &conversion.Jpeg{}
+	g := Gatherer{Decoder: decoder}
+	_, err := g.Gather(tempdir)
 	if actual := err.Error(); actual != expected {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
 	}
