@@ -69,6 +69,20 @@ func TestCmd_Run(t *testing.T) {
 	}
 }
 
+func TestCmd_Run_Nonexistence(t *testing.T) {
+	expected := "lstat nonexistent_path: no such file or directory"
+	decoder := &conversion.Jpeg{}
+	encoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
+	w := ioutil.Discard
+
+	runner := Runner{OutStream: w, Decoder: decoder, Encoder: encoder, Force: true}
+	err := runner.Run("nonexistent_path")
+	actual := err.Error()
+	if actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
+
 func TestCmd_Run_Conflict(t *testing.T) {
 	decoder := &conversion.Jpeg{}
 	encoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
