@@ -59,3 +59,11 @@ func TestGathering_Gather_Unopenable(t *testing.T) {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
 	}
 }
+
+func TestGathering_Gather_Undecodable(t *testing.T) {
+	decoder := &conversion.Jpeg{}
+	g := Gatherer{Decoder: decoder}
+	if _, err := g.Gather("./testdata/"); err != nil {
+		t.Fatal(err)
+	}
+}
