@@ -15,23 +15,8 @@ import (
 	"github.com/hioki-daichi/imgconv/fileutil"
 )
 
-type EncoderMock struct {
-	Png
-}
-
-func (m *EncoderMock) Encode(w io.Writer, img image.Image) error {
-	return errors.New("error in EncodeMock.Encode")
-}
-
 func TestConversion_Convert(t *testing.T) {
 	t.Parallel()
-	jpegDecoder := &Jpeg{}
-	pngDecoder := &Png{}
-	gifDecoder := &Gif{}
-
-	jpegEncoder := &Jpeg{Options: &jpeg.Options{Quality: 1}}
-	pngEncoder := &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
-	gifEncoder := &Gif{Options: &gif.Options{NumColors: 1}}
 
 	cases := []struct {
 		decoder  Decoder
@@ -41,19 +26,19 @@ func TestConversion_Convert(t *testing.T) {
 		expected error
 	}{
 		// JPEG to PNG
-		{decoder: jpegDecoder, encoder: pngEncoder, path: "./jpeg/sample1.jpg", force: true, expected: nil},
+		{decoder: jpegDecoder(), encoder: pngEncoder(), path: "./jpeg/sample1.jpg", force: true, expected: nil},
 		// JPEG to GIF
-		{decoder: jpegDecoder, encoder: gifEncoder, path: "./jpeg/sample1.jpg", force: true, expected: nil},
+		{decoder: jpegDecoder(), encoder: gifEncoder(), path: "./jpeg/sample1.jpg", force: true, expected: nil},
 
 		// PNG to JPEG
-		{decoder: pngDecoder, encoder: jpegEncoder, path: "./png/sample1.png", force: true, expected: nil},
+		{decoder: pngDecoder(), encoder: jpegEncoder(), path: "./png/sample1.png", force: true, expected: nil},
 		// PNG to GIF
-		{decoder: pngDecoder, encoder: gifEncoder, path: "./png/sample1.png", force: true, expected: nil},
+		{decoder: pngDecoder(), encoder: gifEncoder(), path: "./png/sample1.png", force: true, expected: nil},
 
 		// GIF to JPEG
-		{decoder: gifDecoder, encoder: jpegEncoder, path: "./gif/sample1.gif", force: true, expected: nil},
+		{decoder: gifDecoder(), encoder: jpegEncoder(), path: "./gif/sample1.gif", force: true, expected: nil},
 		// GIF to PNG
-		{decoder: gifDecoder, encoder: pngEncoder, path: "./gif/sample1.gif", force: true, expected: nil},
+		{decoder: gifDecoder(), encoder: pngEncoder(), path: "./gif/sample1.gif", force: true, expected: nil},
 	}
 
 	for _, c := range cases {
@@ -61,8 +46,9 @@ func TestConversion_Convert(t *testing.T) {
 			converter := &Converter{Decoder: c.decoder, Encoder: c.encoder}
 
 			withTempDir(t, func(t *testing.T, tempdir string) {
-				if _, actual := converter.Convert(filepath.Join(tempdir, c.path), c.force); c.expected != actual {
-					t.Errorf("expected: %s, actual: %s", c.expected, actual)
+				_, actual := converter.Convert(filepath.Join(tempdir, c.path), c.force)
+				if actual != c.expected {
+					t.Errorf(`expected="%s" actual="%s"`, c.expected, actual)
 				}
 			})
 		})
@@ -71,7 +57,8 @@ func TestConversion_Convert(t *testing.T) {
 
 func TestConversion_Convert_Conflict(t *testing.T) {
 	t.Parallel()
-	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
+
+	converter := &Converter{Decoder: jpegDecoder(), Encoder: pngEncoder()}
 
 	withTempDir(t, func(t *testing.T, tempdir string) {
 		expected := "File already exists: " + tempdir + "/jpeg/sample1.png"
@@ -82,7 +69,6 @@ func TestConversion_Convert_Conflict(t *testing.T) {
 		_, err := converter.Convert(path, false)
 
 		actual := err.Error()
-
 		if actual != expected {
 			t.Errorf("expected: %s, actual: %s", expected, actual)
 		}
@@ -91,9 +77,13 @@ func TestConversion_Convert_Conflict(t *testing.T) {
 
 func TestConversion_Convert_Nonexistence(t *testing.T) {
 	t.Parallel()
+
 	expected := "open ./nonexistent_path: no such file or directory"
-	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
+
+	converter := &Converter{Decoder: jpegDecoder(), Encoder: pngEncoder()}
+
 	_, err := converter.Convert("./nonexistent_path", true)
+
 	actual := err.Error()
 	if actual != expected {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
@@ -102,30 +92,84 @@ func TestConversion_Convert_Nonexistence(t *testing.T) {
 
 func TestConversion_Convert_Undecodable(t *testing.T) {
 	t.Parallel()
+
 	expected := "unexpected EOF"
-	converter := &Converter{Decoder: &Jpeg{}, Encoder: &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}}
+
+	converter := &Converter{Decoder: jpegDecoder(), Encoder: pngEncoder()}
+
 	_, err := converter.Convert("./testdata/undecodable.jpg", true)
-	if actual := err.Error(); actual != expected {
+
+	actual := err.Error()
+	if actual != expected {
 		t.Errorf("expected: %s, actual: %s", expected, actual)
 	}
 }
 
 func TestConversion_Convert_EncodeFailure(t *testing.T) {
 	t.Parallel()
+
 	expected := "error in EncodeMock.Encode"
-	converter := &Converter{Decoder: &Jpeg{}, Encoder: &EncoderMock{}}
+
+	converter := &Converter{Decoder: jpegDecoder(), Encoder: mockEncoder()}
+
 	withTempDir(t, func(t *testing.T, tempdir string) {
-		_, err := converter.Convert(filepath.Join(tempdir, "./jpeg/sample1.jpg"), true)
-		if actual := err.Error(); actual != expected {
+		path := filepath.Join(tempdir, "./jpeg/sample1.jpg")
+
+		_, err := converter.Convert(path, true)
+
+		actual := err.Error()
+		if actual != expected {
 			t.Errorf("expected: %s, actual: %s", expected, actual)
 		}
 	})
 }
 
+func jpegDecoder() *Jpeg {
+	return &Jpeg{}
+}
+
+func pngDecoder() *Png {
+	return &Png{}
+}
+
+func gifDecoder() *Gif {
+	return &Gif{}
+}
+
+func jpegEncoder() *Jpeg {
+	return &Jpeg{Options: &jpeg.Options{Quality: 1}}
+}
+
+func pngEncoder() *Png {
+	return &Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
+}
+
+func gifEncoder() *Gif {
+	return &Gif{Options: &gif.Options{NumColors: 1}}
+}
+
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
 	t.Helper()
+
 	tempdir, _ := ioutil.TempDir("", "imgconv")
-	fileutil.CopyDirRec("../testdata/", tempdir)
+
+	err := fileutil.CopyDirRec("../testdata/", tempdir)
+	if err != nil {
+		t.Fatalf("err %s", err)
+	}
 	defer os.RemoveAll(tempdir)
+
 	f(t, tempdir)
+}
+
+type EncoderMock struct {
+	Png
+}
+
+func (m *EncoderMock) Encode(w io.Writer, img image.Image) error {
+	return errors.New("error in EncodeMock.Encode")
+}
+
+func mockEncoder() *EncoderMock {
+	return &EncoderMock{}
 }

@@ -7,16 +7,20 @@ import (
 
 func TestConversion_Jpeg_MagicBytesSlice(t *testing.T) {
 	t.Parallel()
-	j := Jpeg{}
-	actual := j.MagicBytesSlice()
+
 	expected := [][]byte{[]byte("\xFF\xD8\xFF")}
+
+	j := Jpeg{}
+
+	actual := j.MagicBytesSlice()
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatal(actual, expected)
+		t.Errorf(`expected="%s" actual="%s"`, expected, actual)
 	}
 }
 
 func TestConversion_Jpeg_HasProcessableExtname(t *testing.T) {
 	t.Parallel()
+
 	j := Jpeg{}
 
 	cases := []struct {
@@ -31,8 +35,9 @@ func TestConversion_Jpeg_HasProcessableExtname(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run("", func(t *testing.T) {
-			if actual := j.HasProcessableExtname(c.path); actual != c.expected {
-				t.Errorf("expected: %t, actual: %t", c.expected, actual)
+			actual := j.HasProcessableExtname(c.path)
+			if actual != c.expected {
+				t.Errorf(`expected="%t" actual="%t"`, c.expected, actual)
 			}
 		})
 	}

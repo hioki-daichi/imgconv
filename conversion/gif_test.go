@@ -7,16 +7,20 @@ import (
 
 func TestConversion_Gif_MagicBytesSlice(t *testing.T) {
 	t.Parallel()
-	g := Gif{}
-	actual := g.MagicBytesSlice()
+
 	expected := [][]byte{[]byte("GIF87a"), []byte("GIF89a")}
+
+	g := Gif{}
+
+	actual := g.MagicBytesSlice()
 	if !reflect.DeepEqual(actual, expected) {
-		t.Fatal(actual, expected)
+		t.Errorf(`expected="%s" actual="%s"`, expected, actual)
 	}
 }
 
 func TestConversion_Gif_HasProcessableExtname(t *testing.T) {
 	t.Parallel()
+
 	g := Gif{}
 
 	cases := []struct {
@@ -31,8 +35,9 @@ func TestConversion_Gif_HasProcessableExtname(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run("", func(t *testing.T) {
-			if actual := g.HasProcessableExtname(c.path); actual != c.expected {
-				t.Errorf("expected: %t, actual: %t", c.expected, actual)
+			actual := g.HasProcessableExtname(c.path)
+			if actual != c.expected {
+				t.Errorf(`expected="%t" actual="%t"`, c.expected, actual)
 			}
 		})
 	}

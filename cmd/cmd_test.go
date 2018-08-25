@@ -7,63 +7,82 @@ import (
 	"image/png"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"testing"
 
 	"github.com/hioki-daichi/imgconv/conversion"
 	"github.com/hioki-daichi/imgconv/fileutil"
 )
 
+// Decoder
+var jpegD = &conversion.Jpeg{}
+var pngD = &conversion.Png{}
+var gifD = &conversion.Gif{}
+
+// Encoder
+var jpegE = &conversion.Jpeg{Options: &jpeg.Options{Quality: 1}}
+var pngE = &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
+var gifE = &conversion.Gif{Options: &gif.Options{NumColors: 1}}
+
 func TestCmd_Run(t *testing.T) {
 	t.Parallel()
-	jpegDecoder := &conversion.Jpeg{}
-	pngDecoder := &conversion.Png{}
-	gifDecoder := &conversion.Gif{}
-
-	jpegEncoder := &conversion.Jpeg{Options: &jpeg.Options{Quality: 1}}
-	pngEncoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
-	gifEncoder := &conversion.Gif{Options: &gif.Options{NumColors: 1}}
 
 	cases := []struct {
-		decoder  conversion.Decoder
-		encoder  conversion.Encoder
-		force    bool
+		decoder conversion.Decoder
+		encoder conversion.Encoder
+		force   bool
+
+		// Reason: To be able to handle "tempdir"
 		expected func(string) string
 	}{
-		{decoder: jpegDecoder, encoder: pngEncoder, force: true, expected: func(tempdir string) string {
-			return `Converted: "` + tempdir + `/jpeg/sample1.png"\nConverted: "` + tempdir + `/jpeg/sample2.png"\nConverted: "` + tempdir + `/jpeg/sample3.png"\n`
+		{decoder: jpegD, encoder: pngE, force: true, expected: func(tempdir string) string {
+			return `Converted: "` + tempdir + `/jpeg/sample1.png"
+Converted: "` + tempdir + `/jpeg/sample2.png"
+Converted: "` + tempdir + `/jpeg/sample3.png"
+`
 		}},
-		{decoder: jpegDecoder, encoder: gifEncoder, force: true, expected: func(tempdir string) string {
-			return `Converted: "` + tempdir + `/jpeg/sample1.gif"\nConverted: "` + tempdir + `/jpeg/sample2.gif"\nConverted: "` + tempdir + `/jpeg/sample3.gif"\n`
+		{decoder: jpegD, encoder: gifE, force: true, expected: func(tempdir string) string {
+			return `Converted: "` + tempdir + `/jpeg/sample1.gif"
+Converted: "` + tempdir + `/jpeg/sample2.gif"
+Converted: "` + tempdir + `/jpeg/sample3.gif"
+`
 		}},
-		{decoder: pngDecoder, encoder: jpegEncoder, force: true, expected: func(tempdir string) string {
-			return `Converted: "` + tempdir + `/png/sample1.jpg"\nConverted: "` + tempdir + `/png/sample2.jpg"\n`
+		{decoder: pngD, encoder: jpegE, force: true, expected: func(tempdir string) string {
+			return `Converted: "` + tempdir + `/png/sample1.jpg"
+Converted: "` + tempdir + `/png/sample2.jpg"
+`
 		}},
-		{decoder: pngDecoder, encoder: gifEncoder, force: true, expected: func(tempdir string) string {
-			return `Converted: "` + tempdir + `/png/sample1.gif"\nConverted: "` + tempdir + `/png/sample2.gif"\n`
+		{decoder: pngD, encoder: gifE, force: true, expected: func(tempdir string) string {
+			return `Converted: "` + tempdir + `/png/sample1.gif"
+Converted: "` + tempdir + `/png/sample2.gif"
+`
 		}},
-		{decoder: gifDecoder, encoder: jpegEncoder, force: true, expected: func(tempdir string) string {
-			return `Converted: "` + tempdir + `/gif/sample1.jpg"\n`
+		{decoder: gifD, encoder: jpegE, force: true, expected: func(tempdir string) string {
+			return `Converted: "` + tempdir + `/gif/sample1.jpg"
+`
 		}},
-		{decoder: gifDecoder, encoder: pngEncoder, force: true, expected: func(tempdir string) string {
-			return `Converted: "` + tempdir + `/gif/sample1.png"\n`
+		{decoder: gifD, encoder: pngE, force: true, expected: func(tempdir string) string {
+			return `Converted: "` + tempdir + `/gif/sample1.png"
+`
 		}},
 	}
 
 	for _, c := range cases {
 		t.Run("", func(t *testing.T) {
 			buf := &bytes.Buffer{}
+
 			runner := Runner{OutStream: buf, Decoder: c.decoder, Encoder: c.encoder, Force: c.force}
+
 			withTempDir(t, func(t *testing.T, tempdir string) {
-				expectedStr := c.expected(tempdir)
+				expected := c.expected(tempdir)
 
 				err := runner.Run(tempdir)
 				if err != nil {
-					t.FailNow()
+					t.Fatalf("err %s", err)
 				}
 
-				if bufStr := buf.String(); !regexp.MustCompile(expectedStr).MatchString(bufStr) {
-					t.Errorf("expected: %s, actual: %s", expectedStr, bufStr)
+				actual := buf.String()
+				if actual != expected {
+					t.Errorf(`expected="%s" actual="%s"`, expected, actual)
 				}
 			})
 		})
@@ -72,23 +91,22 @@ func TestCmd_Run(t *testing.T) {
 
 func TestCmd_Run_Nonexistence(t *testing.T) {
 	t.Parallel()
-	expected := "lstat nonexistent_path: no such file or directory"
-	decoder := &conversion.Jpeg{}
-	encoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
-	w := ioutil.Discard
 
-	runner := Runner{OutStream: w, Decoder: decoder, Encoder: encoder, Force: true}
+	expected := "lstat nonexistent_path: no such file or directory"
+
+	runner := Runner{OutStream: ioutil.Discard, Decoder: jpegD, Encoder: pngE, Force: true}
+
 	err := runner.Run("nonexistent_path")
+
 	actual := err.Error()
 	if actual != expected {
-		t.Errorf("expected: %s, actual: %s", expected, actual)
+		t.Errorf(`expected="%s" actual="%s"`, expected, actual)
 	}
 }
 
 func TestCmd_Run_Conflict(t *testing.T) {
 	t.Parallel()
-	decoder := &conversion.Jpeg{}
-	encoder := &conversion.Png{Encoder: &png.Encoder{CompressionLevel: png.NoCompression}}
+
 	w := ioutil.Discard
 
 	withTempDir(t, func(t *testing.T, tempdir string) {
@@ -97,26 +115,31 @@ func TestCmd_Run_Conflict(t *testing.T) {
 		var runner Runner
 		var err error
 
-		runner = Runner{OutStream: w, Decoder: decoder, Encoder: encoder, Force: true}
+		runner = Runner{OutStream: w, Decoder: jpegD, Encoder: pngE, Force: true}
 		err = runner.Run(tempdir)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("err %s", err)
 		}
 
-		runner = Runner{OutStream: w, Decoder: decoder, Encoder: encoder, Force: false}
+		runner = Runner{OutStream: w, Decoder: jpegD, Encoder: pngE, Force: false}
 		err = runner.Run(tempdir)
-
 		actual := err.Error()
 		if actual != expected {
-			t.Errorf("expected: %s, actual: %s", expected, actual)
+			t.Errorf(`expected="%s" actual="%s"`, expected, actual)
 		}
 	})
 }
 
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
 	t.Helper()
+
 	tempdir, _ := ioutil.TempDir("", "imgconv")
-	fileutil.CopyDirRec("../testdata/", tempdir)
+
+	err := fileutil.CopyDirRec("../testdata/", tempdir)
+	if err != nil {
+		t.Fatalf("err %s", err)
+	}
 	defer os.RemoveAll(tempdir)
+
 	f(t, tempdir)
 }
