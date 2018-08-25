@@ -26,3 +26,13 @@ func TestGathering_Gather(t *testing.T) {
 		})
 	}
 }
+
+func TestGathering_Gather_Nonexistence(t *testing.T) {
+	expected := "lstat nonexistent_path: no such file or directory"
+	decoder := &conversion.Jpeg{}
+	g := Gatherer{Decoder: decoder}
+	_, err := g.Gather("nonexistent_path")
+	if actual := err.Error(); actual != expected {
+		t.Errorf("expected: %s, actual: %s", expected, actual)
+	}
+}
