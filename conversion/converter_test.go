@@ -118,6 +118,7 @@ func TestConversion_Convert_EncodeFailure(t *testing.T) {
 }
 
 func withTempDir(t *testing.T, f func(t *testing.T, tempdir string)) {
+	t.Helper()
 	tempdir, _ := ioutil.TempDir("", "imgconv")
 	fileutil.CopyDirRec("../testdata/", tempdir)
 	defer os.RemoveAll(tempdir)
