@@ -3,6 +3,7 @@ package fileutil
 import (
 	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -162,6 +163,28 @@ func TestFileutil_CopyDirRec_MkdirFailure(t *testing.T) {
 	}
 }
 
+func TestFileutil_Copy_CreateError(t *testing.T) {
+	expected := "error on create"
+	tempDir, _ := ioutil.TempDir("", "imgconv")
+	m := &createCopierMock{errOnCreate: true, errOnCopy: false}
+	err := Copy(m, "../testdata/", tempDir)
+	actual := err.Error()
+	if actual != expected {
+		t.Errorf(`expected="%s" actual="%s"`, expected, actual)
+	}
+}
+
+func TestFileutil_Copy_CopyError(t *testing.T) {
+	expected := "error on copy"
+	tempDir, _ := ioutil.TempDir("", "imgconv")
+	m := &createCopierMock{errOnCreate: false, errOnCopy: true}
+	err := Copy(m, "../testdata/", tempDir)
+	actual := err.Error()
+	if actual != expected {
+		t.Errorf(`expected="%s" actual="%s"`, expected, actual)
+	}
+}
+
 type readSeekerMock struct {
 	times int
 
@@ -188,4 +211,23 @@ func (m *readSeekerMock) Seek(_ int64, _ int) (int64, error) {
 	}
 
 	return 0, err
+}
+
+type createCopierMock struct {
+	errOnCreate bool
+	errOnCopy   bool
+}
+
+func (c *createCopierMock) Create(name string) (*os.File, error) {
+	if c.errOnCreate {
+		return nil, errors.New("error on create")
+	}
+	return nil, nil
+}
+
+func (c *createCopierMock) Copy(dst io.Writer, src io.Reader) (written int64, err error) {
+	if c.errOnCopy {
+		return 0, errors.New("error on copy")
+	}
+	return 0, nil
 }
