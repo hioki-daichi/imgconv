@@ -85,12 +85,27 @@ func TestGathering_Gather_Unopenable(t *testing.T) {
 	}
 }
 
+func TestGathering_Gather_FailedToCheckDecodable(t *testing.T) {
+	t.Parallel()
+
+	expected := "EOF"
+
+	g := Gatherer{Decoder: jpegD}
+
+	_, err := g.Gather("./testdata/empty.jpg")
+
+	actual := err.Error()
+	if actual != expected {
+		t.Errorf(`expected="%s" actual="%s"`, expected, actual)
+	}
+}
+
 func TestGathering_Gather_Undecodable(t *testing.T) {
 	t.Parallel()
 
 	g := Gatherer{Decoder: jpegD}
 
-	_, err := g.Gather("./testdata/")
+	_, err := g.Gather("./testdata/undecodable.jpg")
 	if err != nil {
 		t.Fatalf("err %s", err)
 	}
