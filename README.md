@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.com/hioki-daichi/imgconv.svg?branch=master)](https://travis-ci.com/hioki-daichi/imgconv)
 [![codecov](https://codecov.io/gh/hioki-daichi/imgconv/branch/master/graph/badge.svg)](https://codecov.io/gh/hioki-daichi/imgconv)
+[![Go Report Card](https://goreportcard.com/badge/github.com/hioki-daichi/imgconv)](https://goreportcard.com/report/github.com/hioki-daichi/imgconv)
+[![GoDoc](https://godoc.org/github.com/hioki-daichi/imgconv?status.svg)](https://godoc.org/github.com/hioki-daichi/imgconv)
 
 `imgconv` is a command to convert the file format under the specified directory.
 
